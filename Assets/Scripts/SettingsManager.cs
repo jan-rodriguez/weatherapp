@@ -6,6 +6,7 @@ public class SettingsManager : MonoBehaviour {
 
 	public GameObject settingsPanel;
 	public GameObject weatherPanel;
+	public GameObject settingsButton;
 
 	// Use this for initialization
 	void Start () {
@@ -20,10 +21,12 @@ public class SettingsManager : MonoBehaviour {
 	public void ShowSettingsMenu () {
 		settingsPanel.animation.Play ("SettingScrollIn");
 		weatherPanel.animation.Play ("ScrollOut");
+		settingsButton.animation.Play ("SetBtnScrollOut");
 	}
 
 	public void HideSettingsMenu () {
 		settingsPanel.animation.Play ("SettingScrollOut");
 		weatherPanel.animation.Play ("ScrollIn");
+		settingsButton.animation.Play ("SetBtnScrollIn");
 	}
 }

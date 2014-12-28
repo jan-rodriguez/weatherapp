@@ -3,16 +3,22 @@ using UnityEngine.UI;
 using System.Collections;
 using LitJson;
 
-public class WeatherSearchManager : MonoBehaviour {
+public class WeatherInfoManager : MonoBehaviour {
 
 	private const string degreesSymbol = "\u00B0";
 	private const string WEBQUERYURL  = "http://api.openweathermap.org/data/2.5/weather?q=";
 
 	private bool gotWeather = false;
-	private bool isFarenheit = true;
 	private string currWebQueryUrl;
+	private WWW web;
+	private float kelvinTemp;
+	private bool isFarenheit = true;
 
-	WWW web;
+	public bool IsFarenheit 
+	{
+		set{this.isFarenheit = value;}
+	}
+
 	
 	public Text tempText;
 	public Text locationText;
@@ -29,25 +35,25 @@ public class WeatherSearchManager : MonoBehaviour {
 
 		if (!gotWeather && web.isDone) {
 			gotWeather = true;
-			setWeatherInfo();
+			SetWeatherInfo();
 		}
 	
 	}
 
 	public void FindNewLocationWeather(string location) {
 		currWebQueryUrl = WEBQUERYURL + location; 
-
+		input.gameObject.SetActive (false);
 		web = new WWW (currWebQueryUrl);
 		gotWeather = false;
 	}
 
-	void setWeatherInfo() {
+	public void SetWeatherInfo() {
 
 		JsonData weatherData = JsonMapper.ToObject(web.text);
 
 		//Didn't find city
 		if (weatherData.Keys.Contains ("message")) {
-			tempText.text = "Not found";
+			SetLocationText("Not found");
 		}
 		else{
 			//Location
@@ -56,34 +62,32 @@ public class WeatherSearchManager : MonoBehaviour {
 			
 			//Set temparature
 			string tempString = weatherData["main"]["temp"].ToString();
-			SetTemperatureText(tempString);
+			kelvinTemp = float.Parse(tempString);
+			SetWeatherTemp();
 		}
 
 		
 	}
 
 	void SetLocationText(string location){
-		input.gameObject.SetActive(false);
 		locationText.gameObject.SetActive(true);
 		locationText.text = location;
 	}
 
-	void SetTemperatureText(string kelvinTemp){
-		float kelvin = float.Parse(kelvinTemp);
-
+	public void SetWeatherTemp(){
+		float kelvin = kelvinTemp;
 
 		if (isFarenheit) {
 			int farenheit = KelvinToFarenheit(kelvin);
 			tempText.text = farenheit + "°F";
-
+			
 		}
 		else{
 			int celcius = KelvinToCelcius(kelvin);
 			tempText.text = celcius + "°C";
 		}
-
 	}
-	
+
 	int KelvinToFarenheit(float kelvin) {
 		int celcius = (int)kelvin - 273;
 		int farenheit = (int)((celcius * 1.8) + 32);
@@ -99,5 +103,6 @@ public class WeatherSearchManager : MonoBehaviour {
 		locationText.gameObject.SetActive (false);
 		input.gameObject.SetActive (true);
 	}
-	
+
+
 }

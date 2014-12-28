@@ -4,7 +4,7 @@ using System.Collections;
 
 public class LocaitonInputManager : MonoBehaviour {
 
-	public WeatherSearchManager weatherManager;
+	public WeatherInfoManager weatherManager;
 	public InputField input;
 
 	// Use this for initialization
