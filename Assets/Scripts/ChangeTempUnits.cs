@@ -15,13 +15,7 @@ public class ChangeTempUnits : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		//Set orange's values
-		orange.r = 1f;
-		orange.g = 0.478f;
-		orange.b = 0f;
-		orange.a = 1f;
-
-		btnImage = GetComponent<Image> ();
+		InitializeValues ();
 	}
 	
 	// Update is called once per frame
@@ -29,9 +23,21 @@ public class ChangeTempUnits : MonoBehaviour {
 	
 	}
 
-	public void SetNewTempUnits() {
+	void InitializeValues (){
+		if (btnImage == null) {
+			//Set orange's values
+			orange.r = 1f;
+			orange.g = 0.478f;
+			orange.b = 0f;
+			orange.a = 1f;
+			btnImage = GetComponent<Image> ();
+		}
+	}
+
+	public void Select() {
 		//Update button color and change temp in main screen
 		if (!isSelected) {
+			InitializeValues();
 			btnImage.color = orange;
 			isSelected = true;
 			otherBtnScript.Deselect();
@@ -41,6 +47,7 @@ public class ChangeTempUnits : MonoBehaviour {
 	}
 
 	public void Deselect(){
+		InitializeValues();
 		isSelected = false;
 		btnImage.color = Color.white;
 	}

@@ -18,8 +18,15 @@ public class LocaitonInputManager : MonoBehaviour {
 	}
 
 	public void PerformSearch() {
+
 		string locationInput = input.text;
 
-		weatherManager.FindNewLocationWeather (locationInput);
+		//Assure location input isn't empty
+		if(!string.IsNullOrEmpty(locationInput)){
+			weatherManager.FindNewLocationWeather (locationInput);
+			input.text = "";
+		}
+
+		weatherManager.HideInputAndShowText ();
 	}
 }

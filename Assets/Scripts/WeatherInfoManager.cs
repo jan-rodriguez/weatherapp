@@ -2,11 +2,14 @@
 using UnityEngine.UI;
 using System.Collections;
 using LitJson;
+using System.IO;
 
 public class WeatherInfoManager : MonoBehaviour {
 
-	private const string degreesSymbol = "\u00B0";
+	private const string DEGREESSYMBOL = "\u00B0";
 	private const string WEBQUERYURL  = "http://api.openweathermap.org/data/2.5/weather?q=";
+	private string LOCATIONFILEPATH;
+	private string TEMPUNITFILEPATH;
 
 	private bool gotWeather = false;
 	private string currWebQueryUrl;
@@ -16,7 +19,19 @@ public class WeatherInfoManager : MonoBehaviour {
 
 	public bool IsFarenheit 
 	{
-		set{this.isFarenheit = value;}
+		set{
+			this.isFarenheit = value;
+			string tempUnits = value ? "f" : "c";
+
+			//Write the default temp units to file
+			if(!File.Exists(TEMPUNITFILEPATH)){
+				FileStream stream = File.Create(TEMPUNITFILEPATH);
+				stream.Close();
+			}
+
+			File.WriteAllText(TEMPUNITFILEPATH, tempUnits);
+
+		}
 	}
 
 	
@@ -24,8 +39,14 @@ public class WeatherInfoManager : MonoBehaviour {
 	public Text locationText;
 	public InputField input;
 
+	public ChangeTempUnits celciusBtnScript;
+
 	// Use this for initialization
-	void Start () {
+	void Awake () {
+		LOCATIONFILEPATH = Application.persistentDataPath + "/location.txt";
+		TEMPUNITFILEPATH = Application.persistentDataPath + "/temp.txt";
+
+		SetUpDefaults ();
 		currWebQueryUrl = WEBQUERYURL + "cambridge,ma";
 		web = new WWW (currWebQueryUrl);
 	}
@@ -40,9 +61,19 @@ public class WeatherInfoManager : MonoBehaviour {
 	
 	}
 
+	void SetUpDefaults(){
+		if(File.Exists(TEMPUNITFILEPATH)){
+			string tempUnits = File.ReadAllText (TEMPUNITFILEPATH);
+			if (tempUnits == "c") {
+				isFarenheit = false;
+				celciusBtnScript.Select();
+			}
+		}
+
+	}
+
 	public void FindNewLocationWeather(string location) {
-		currWebQueryUrl = WEBQUERYURL + location; 
-		input.gameObject.SetActive (false);
+		currWebQueryUrl = WEBQUERYURL + location;
 		web = new WWW (currWebQueryUrl);
 		gotWeather = false;
 	}
@@ -54,6 +85,7 @@ public class WeatherInfoManager : MonoBehaviour {
 		//Didn't find city
 		if (weatherData.Keys.Contains ("message")) {
 			SetLocationText("Not found");
+			SetWeatherTemp("");
 		}
 		else{
 			//Location
@@ -65,7 +97,6 @@ public class WeatherInfoManager : MonoBehaviour {
 			kelvinTemp = float.Parse(tempString);
 			SetWeatherTemp();
 		}
-
 		
 	}
 
@@ -88,6 +119,10 @@ public class WeatherInfoManager : MonoBehaviour {
 		}
 	}
 
+	void SetWeatherTemp (string temp){
+		tempText.text = temp;
+	}
+
 	int KelvinToFarenheit(float kelvin) {
 		int celcius = (int)kelvin - 273;
 		int farenheit = (int)((celcius * 1.8) + 32);
@@ -102,6 +137,11 @@ public class WeatherInfoManager : MonoBehaviour {
 	public void HideTextAndShowInput() {
 		locationText.gameObject.SetActive (false);
 		input.gameObject.SetActive (true);
+	}
+
+	public void HideInputAndShowText(){
+		locationText.gameObject.SetActive (true);
+		input.gameObject.SetActive (false);
 	}
 
 
