@@ -6,6 +6,7 @@ public class LocaitonInputManager : MonoBehaviour {
 
 	public WeatherInfoManager weatherManager;
 	public InputField input;
+	public InputField defaultLocInput;
 
 	// Use this for initialization
 	void Start () {
@@ -28,5 +29,17 @@ public class LocaitonInputManager : MonoBehaviour {
 		}
 
 		weatherManager.HideInputAndShowText ();
+	}
+
+	public void SetDefaultLocation() {
+
+		string locationInput = defaultLocInput.text;
+
+		print ("Trying to set " + locationInput);
+		//Assure location input isn't empty
+		if(!string.IsNullOrEmpty(locationInput)){
+			weatherManager.TrySetDefaultLocation (locationInput);
+			input.text = "";
+		}
 	}
 }

@@ -13,10 +13,19 @@ public class WeatherInfoManager : MonoBehaviour {
 
 	private bool gotWeather = false;
 	private string currWebQueryUrl;
+	private string currLocation = "New York, NY";
 	private WWW web;
+
+	//Web connection used to test whether a locatin exists
+	private WWW testWeb;
+	private bool finishedTestLocSearch = false;
+	private bool foundTestLocation = false;
+	private string curTestLocation;
+
 	private float kelvinTemp;
 	private bool isFarenheit = true;
 
+	//Setter for private isFarenheit field. When changed, saves to a file containing the default units
 	public bool IsFarenheit 
 	{
 		set{
@@ -28,16 +37,14 @@ public class WeatherInfoManager : MonoBehaviour {
 				FileStream stream = File.Create(TEMPUNITFILEPATH);
 				stream.Close();
 			}
-
 			File.WriteAllText(TEMPUNITFILEPATH, tempUnits);
-
 		}
 	}
 
 	
 	public Text tempText;
 	public Text locationText;
-	public InputField input;
+	public InputField locationInput;
 
 	public ChangeTempUnits celciusBtnScript;
 
@@ -47,7 +54,8 @@ public class WeatherInfoManager : MonoBehaviour {
 		TEMPUNITFILEPATH = Application.persistentDataPath + "/temp.txt";
 
 		SetUpDefaults ();
-		currWebQueryUrl = WEBQUERYURL + "cambridge,ma";
+
+		currWebQueryUrl = WEBQUERYURL + currLocation;
 		web = new WWW (currWebQueryUrl);
 	}
 	
@@ -69,6 +77,9 @@ public class WeatherInfoManager : MonoBehaviour {
 				celciusBtnScript.Select();
 			}
 		}
+		if (File.Exists (LOCATIONFILEPATH)) {
+			currLocation = File.ReadAllText(LOCATIONFILEPATH);
+		}
 
 	}
 
@@ -83,7 +94,7 @@ public class WeatherInfoManager : MonoBehaviour {
 		JsonData weatherData = JsonMapper.ToObject(web.text);
 
 		//Didn't find city
-		if (weatherData.Keys.Contains ("message")) {
+		if (!FoundLocation(weatherData)) {
 			SetLocationText("Not found");
 			SetWeatherTemp("");
 		}
@@ -136,12 +147,62 @@ public class WeatherInfoManager : MonoBehaviour {
 
 	public void HideTextAndShowInput() {
 		locationText.gameObject.SetActive (false);
-		input.gameObject.SetActive (true);
+		locationInput.gameObject.SetActive (true);
 	}
 
 	public void HideInputAndShowText(){
 		locationText.gameObject.SetActive (true);
-		input.gameObject.SetActive (false);
+		locationInput.gameObject.SetActive (false);
+	}
+
+	public void TrySetDefaultLocation (string location) {
+		curTestLocation = location;
+
+		//Starts Coroutine checking for the test default location
+		StartCoroutine(CheckTestLocation (location));
+	}
+
+	private IEnumerator CheckTestLocation (string location){
+
+		print ("Checking for " + curTestLocation);
+		//Trying to find new test location
+		finishedTestLocSearch = false;
+		foundTestLocation = false;
+		curTestLocation = location;
+
+		testWeb = new WWW (WEBQUERYURL + location);
+
+		//Search until we find whether or not the test location exists
+		while (!finishedTestLocSearch) {
+			if(testWeb.error != null){
+				print("Error in testWeb");
+				break;
+			}
+			//Finished the web search and can now check wether or not the location exists
+			if(testWeb.isDone){
+				JsonData locData = JsonMapper.ToObject(testWeb.text);
+				if(FoundLocation(locData)){
+					foundTestLocation = true;
+					SaveDefaultLocation (location);
+					print ("I have done it!!");
+				}else{
+					print ("Didn't find it!!");
+					foundTestLocation = false;
+				}
+				finishedTestLocSearch = true;
+				break;
+			}
+			yield return new WaitForSeconds(.1f);
+		}
+		yield return null;
+	}
+
+	private bool FoundLocation (JsonData weatherData){
+		return !weatherData.Keys.Contains ("message");
+	}
+
+	private void SaveDefaultLocation (string location){
+		File.WriteAllText(LOCATIONFILEPATH, location);
 	}
 
 
